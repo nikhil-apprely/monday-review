@@ -22,15 +22,33 @@ export default function TableView() {
   const [editingKey, setEditingKey] = useState("");
   const [mePersonData, setMePersonData] = useState([]);
   const [imgSrc, setImgSrc] = useState("");
+  const [activityLoader, setActivityLoader] = useState(true);
+  const [corporateHolidays, setCorporateHolidays] = useState([
+    "2022-08-16",
+    "2022-08-03",
+  ]);
+  const [personalHolidays, setPersonalHolidays] = useState([
+    "2022-08-24",
+    "2022-08-10",
+  ]);
   const [corporateData, setCorporateData] = useState([]);
 
-  const [corporateHolidays, setCorporateHolidays] = useState([
-    "2022-07-13",
-    "2022-07-05",
-  ]);
-
-  // function getCorporateHolidaysAPI() {
   useEffect(() => {
+    fetchCorporateHolidays().then(
+      function (value) {
+        console.log("PASSED");
+
+        // setCorporateArray();
+      },
+      function (error) {
+        console.log("Null");
+      }
+    );
+    // fetchMeData();
+    // setImgSrc(mePersonData.photo_thumb_small);
+  }, []);
+
+  async function fetchCorporateHolidays() {
     let query = `query {
     boards (ids: 2901550979) {
     name
@@ -46,7 +64,7 @@ export default function TableView() {
   }
 }`;
 
-    fetch("https://api.monday.com/v2", {
+    await fetch("https://api.monday.com/v2", {
       method: "post",
       headers: {
         "Content-Type": "application/json",
@@ -60,13 +78,15 @@ export default function TableView() {
       .then((res) => res.json())
       .then((res) => {
         setCorporateData(res.data.boards[0].items);
-        console.log(res.data.boards[0].items);
+        setCorporateArray();
+        console.log(res.data.boards[0].items, "222");
       });
-  }, []);
+  }
 
-  function setCorporateArray() {
+  async function setCorporateArray() {
     let tempCorporateData = [];
-    if (corporateData) {
+
+    if (corporateData.length > 0) {
       corporateData.forEach((item, index) => {
         console.log(item, "ITEMMM");
         item.column_values.forEach((column, index) => {
@@ -77,13 +97,14 @@ export default function TableView() {
         });
       });
     }
-    // setCorporateHolidays(tempCorporateData);
-  }
 
-  useEffect(() => {
-    setCorporateArray();
-    console.log(corporateHolidays);
-  }, []);
+    // setCorporateHolidays(tempCorporateData);
+
+    console.log(tempCorporateData, "temp cor");
+    console.log(corporateData, "use state corporate");
+
+    // setActivityLoader(true);
+  }
 
   // const [personalHolidays, setPersonalHolidays] = useState(["2022-07-14"]);
 
@@ -96,7 +117,49 @@ export default function TableView() {
   //   }, 2500);
   // }, []);
 
-  useEffect(() => {
+  function setCustomClassName(nameOfDay, currentYear, numberOfCurrentMonth, i) {
+    if (nameOfDay === "Sun" || nameOfDay === "Sat") return "rowCustomStyling";
+
+    // corporateHolidays
+    var index, strDay, strMonth, strYear, dateArr;
+
+    for (index = 0; index < corporateHolidays.length; index++) {
+      dateArr = corporateHolidays[index].split("-");
+
+      strYear = dateArr[0];
+      strMonth = dateArr[1];
+      strDay = dateArr[2];
+
+      // console.log(strDay, "strDay");
+      // console.log(strMonth, "strMonth");
+      // console.log(strYear, "strYear");
+
+      if (
+        (currentYear === strYear) &
+        (numberOfCurrentMonth === strMonth) &
+        (i == strDay)
+      )
+        return "corporateCustomStyling";
+    }
+
+    // personalHolidays
+    for (index = 0; index < personalHolidays.length; index++) {
+      dateArr = personalHolidays[index].split("-");
+
+      strYear = dateArr[0];
+      strMonth = dateArr[1];
+      strDay = dateArr[2];
+
+      if (
+        (currentYear === strYear) &
+        (numberOfCurrentMonth === strMonth) &
+        (i == strDay)
+      )
+        return "personalCustomStyling";
+    }
+  }
+
+  async function fetchMeData() {
     let query = `query {
       me {
     is_guest
@@ -105,8 +168,7 @@ export default function TableView() {
     id
     }
 }`;
-
-    fetch("https://api.monday.com/v2", {
+    await fetch("https://api.monday.com/v2", {
       method: "post",
       headers: {
         "Content-Type": "application/json",
@@ -121,14 +183,9 @@ export default function TableView() {
       .then((res) => {
         setMePersonData(res.data.me);
 
-        console.log(mePersonData, "hello");
+        console.log(res.data.me, "ME");
       });
-  }, []);
-
-  useEffect(() => {
-    console.log(mePersonData, "hello again");
-    setImgSrc(mePersonData.photo_thumb_small);
-  }, [mePersonData]);
+  }
 
   // ----------
 
@@ -278,65 +335,49 @@ export default function TableView() {
     }
   );
 
-  // days of Month as title
+  renderMonthColumn();
 
-  const momentObj = moment();
-  const daysInCurrentMonth = momentObj.daysInMonth(); // 31
-  const nameOfCurrentMonth = momentObj.format("MMM"); // Jul
-  const numberOfCurrentMonth = momentObj.format("MM"); // "07" for July
-  const currentYear = momentObj.format("YYYY"); // 2022
+  function renderMonthColumn() {
+    // days of Month as title
 
-  var oneDate = moment(
-    "01-" + numberOfCurrentMonth + "-" + currentYear,
-    "DD-MM-YYYY"
-  ); // this will make an object of moment for the very first date of every month
+    const momentObj = moment();
+    const daysInCurrentMonth = momentObj.daysInMonth(); // 31
+    const nameOfCurrentMonth = momentObj.format("MMM"); // Jul
+    const numberOfCurrentMonth = momentObj.format("MM"); // "07" for July
+    const currentYear = momentObj.format("YYYY"); // 2022
 
-  var nameOfDay = oneDate.format("ddd"); // "Fri" as first day of month july
-  var dayObj = "";
+    var oneDate = moment(
+      "01-" + numberOfCurrentMonth + "-" + currentYear,
+      "DD-MM-YYYY"
+    ); // this will make an object of moment for the very first date of every month
 
-  function setCustomClassName() {
-    if (nameOfDay === "Sun" || nameOfDay === "Sat") return "rowCustomStyling";
+    var nameOfDay = oneDate.format("ddd"); // "Fri" as first day of month july
+    var dayObj = "";
 
-    var index, strDay, strMonth, strYear, dateArr;
+    for (var i = 1; i <= daysInCurrentMonth; i++) {
+      columns.push({
+        title: (
+          <span>
+            {i} {nameOfCurrentMonth}{" "}
+            <span className="nameOfDay-styling">{nameOfDay}</span>
+          </span>
+        ), // 1 Jul
+        dataIndex: `date${i}`, // date1
+        width: 80,
+        key: `${i}`, // 1
+        editable: true,
+        align: "center",
+        className: setCustomClassName(
+          nameOfDay,
+          currentYear,
+          numberOfCurrentMonth,
+          i
+        ),
+      });
 
-    for (index = 0; index < corporateHolidays.length; index++) {
-      dateArr = corporateHolidays[index].split("-");
-
-      strYear = dateArr[0];
-      strMonth = dateArr[1];
-      strDay = dateArr[2];
-
-      // console.log(strDay, "strDay");
-      // console.log(strMonth, "strMonth");
-      // console.log(strYear, "strYear");
-
-      if (
-        (currentYear === strYear) &
-        (numberOfCurrentMonth === strMonth) &
-        (i == strDay)
-      )
-        return "corporateCustomStyling";
+      dayObj = oneDate.add(1, "day"); // will keep increasing date along with for loop
+      nameOfDay = dayObj.format("ddd"); // "Sat" as day of month july and will go on along with for loop
     }
-  }
-
-  for (var i = 1; i <= daysInCurrentMonth; i++) {
-    columns.push({
-      title: (
-        <span>
-          {i} {nameOfCurrentMonth}{" "}
-          <span className="nameOfDay-styling">{nameOfDay}</span>
-        </span>
-      ), // 1 Jul
-      dataIndex: `date${i}`, // date1
-      width: 80,
-      key: `${i}`, // 1
-      editable: true,
-      align: "center",
-      className: setCustomClassName(i),
-    });
-
-    dayObj = oneDate.add(1, "day"); // will keep increasing date along with for loop
-    nameOfDay = dayObj.format("ddd"); // "Sat" as day of month july and will go on along with for loop
   }
 
   columns.push({
@@ -408,35 +449,39 @@ export default function TableView() {
 
   return (
     <div style={{ margin: "30px" }}>
-      <Button
-        onClick={handleAdd}
-        type="primary"
-        style={{
-          marginBottom: 16,
-        }}
-      >
-        Add a row
-      </Button>
-      <Form form={form} component={false}>
-        <Table
-          scroll={{
-            x: 1300,
-          }}
-          components={{
-            body: {
-              cell: EditableCell,
-            },
-          }}
-          bordered
-          onChange={onChange}
-          dataSource={data}
-          columns={mergedColumns} // mergedColumns so it can be edited
-          rowClassName="editable-row"
-          pagination={{
-            onChange: cancel,
-          }}
-        />
-      </Form>
+      {activityLoader ? (
+        <div>
+          <Button
+            onClick={handleAdd}
+            type="primary"
+            style={{
+              marginBottom: 16,
+            }}
+          >
+            Add a row
+          </Button>
+          <Form form={form} component={false}>
+            <Table
+              scroll={{
+                x: 1300,
+              }}
+              components={{
+                body: {
+                  cell: EditableCell,
+                },
+              }}
+              bordered
+              onChange={onChange}
+              dataSource={data}
+              columns={mergedColumns} // mergedColumns so it can be edited
+              rowClassName="editable-row"
+              pagination={{
+                onChange: cancel,
+              }}
+            />
+          </Form>
+        </div>
+      ) : null}
     </div>
   );
 }

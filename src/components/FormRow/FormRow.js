@@ -167,20 +167,20 @@ export default function FormRow({ show, setShow }) {
 
   if (!show) return null;
 
-  const activitesData = [
-    {
-      label: "Activity 1",
-      value: 1,
-    },
-    {
-      label: "Activity 2",
-      value: 2,
-    },
-    {
-      label: "Acitivity 3",
-      value: 3,
-    },
-  ];
+  // const activitesData = [
+  //   {
+  //     label: "Activity 1",
+  //     value: 1,
+  //   },
+  //   {
+  //     label: "Activity 2",
+  //     value: 2,
+  //   },
+  //   {
+  //     label: "Acitivity 3",
+  //     value: 3,
+  //   },
+  // ];
   return (
     <div
       className="main-container-form"
